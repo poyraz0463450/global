@@ -160,21 +160,31 @@ export function useQC() {
   const [qcRecords, setQcRecords] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Note: Gerçek Mimaride (Production), doğrudan 'workOrders'dan ziyade QC 
-  // koleksiyonundan veri çekilir. Burada onay bekleyen İş Emirlerini 'workOrders'tan
-  // filtreleyerek QC panosuna düşürüyoruz.
+  // Proses QC için İş Emirlerinden veri çekiyoruz
   const { workOrders, loading: woLoading } = useWorkOrders();
-
-  // İş emri tamamlandığında QC (Kalite) onayına düşer ("COMPLETED" or "QC_PENDING")
   const pendingProcessQC = workOrders.filter(w => w.status === 'COMPLETED');
 
-  // Gerçekte kaydedilen geçmiş QC raporlarını dinlemek için:
+  // Gelen / Giriş QC (Incoming QC) verilerini Firestore'dan dinliyoruz
   useEffect(() => {
-    // Burada qcService olmadığı için şimdilik woLoading dönüyoruz veya dummy state
-    setLoading(woLoading);
-  }, [woLoading]);
+    const timeout = setTimeout(() => setLoading(false), 800);
+    const unsub = qcService.subscribeIncomingQC?.((data) => {
+      clearTimeout(timeout);
+      setQcRecords(data);
+      setLoading(false);
+    });
+    
+    return () => { 
+      clearTimeout(timeout); 
+      if (typeof unsub === 'function') unsub(); 
+    };
+  }, []);
 
-  return { pendingProcessQC, qcRecords, loading };
+  return { 
+    incomingQC: qcRecords.filter(r => r.type === 'Giriş'), 
+    processQC: qcRecords.filter(r => r.type === 'Proses' || r.type === 'Final'), 
+    pendingProcessQC,
+    loading: loading || woLoading 
+  };
 }
 
 // ─── useDashboardStats: Dashboard için toplu veri ─────────────────────────────
