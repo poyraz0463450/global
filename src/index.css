@@ -147,12 +147,78 @@ body {
 .anim-pulse    { animation: pulse 2s ease-in-out infinite; }
 
 /* ── Background Grid ──────────────────────────────────────────────────────── */
-/* Defense-Grade differentiator: subtle grid overlay */
+/* Defense-Grade differentiator: subtle grid overlay with scanline */
 .bg-grid {
+  position: relative;
   background-image:
     linear-gradient(rgba(0, 200, 232, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 200, 232, 0.03) 1px, transparent 1px);
   background-size: 32px 32px;
+}
+.bg-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0, 200, 232, 0.05) 50%, transparent);
+  height: 15vh;
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── UI Design Spells (Glass & Spotlight) ─────────────────────────────────── */
+.glass {
+  background: rgba(13, 17, 23, 0.65) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.spotlight-card {
+  position: relative;
+  background: var(--c-bg-surface);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--c-border);
+  overflow: hidden;
+  transition: transform var(--t-normal), box-shadow var(--t-normal);
+}
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(
+    600px circle at var(--mouse-x, -500px) var(--mouse-y, -500px),
+    var(--spotlight-color, rgba(0, 200, 232, 0.1)),
+    transparent 40%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+.spotlight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--c-border-bright);
+}
+.spotlight-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Yükleme İskeleti (Skeleton) */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--c-bg-overlay) 25%, var(--c-bg-hover) 50%, var(--c-bg-overlay) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--r-sm);
 }
 
 /* ── Typography Utilities ─────────────────────────────────────────────────── */
@@ -399,21 +465,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
-  transition: border-color var(--t-normal), box-shadow var(--t-normal);
   position: relative;
-  overflow: hidden;
 }
-.kpi-card::before {
+.kpi-card::after {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
   background: var(--kpi-color, var(--c-accent));
   opacity: 0.6;
-}
-.kpi-card:hover {
-  border-color: var(--c-border-bright);
-  box-shadow: var(--shadow-md);
+  z-index: 2;
 }
 .kpi-label {
   font-size: 10.5px;
@@ -423,11 +484,12 @@ body {
   color: var(--t-muted);
 }
 .kpi-value {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   font-family: var(--font-mono);
   color: var(--t-primary);
   line-height: 1;
+  text-shadow: 0 0 16px rgba(255,255,255,0.1);
 }
 .kpi-sub {
   font-size: 11px;

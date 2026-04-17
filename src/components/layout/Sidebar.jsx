@@ -174,7 +174,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <div className={`sidebar glass ${collapsed ? 'collapsed' : ''}`}>
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="sidebar-logo-mark">AR</div>

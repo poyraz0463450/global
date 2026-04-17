@@ -19,6 +19,35 @@ export function InlineSpinner({ size = 16 }) {
   );
 }
 
+// ── Skeletons (Yükleme İskeletleri) ──────────────────────────────────────────
+export function Skeleton({ width = '100%', height = 20, style }) {
+  return <div className="skeleton" style={{ width, height, ...style }} />;
+}
+
+// ── Hover Spotlight Card (Design Spells) ─────────────────────────────────────
+export function SpotlightCard({ children, className = '', style, onClick }) {
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    e.currentTarget.style.setProperty('--mouse-x', `${x}px`);
+    e.currentTarget.style.setProperty('--mouse-y', `${y}px`);
+  };
+
+  return (
+    <div 
+      className={`spotlight-card ${className}`} 
+      style={style} 
+      onMouseMove={handleMouseMove}
+      onClick={onClick}
+    >
+      <div className="spotlight-content">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // ── Empty State ──────────────────────────────────────────────────────────────
 export function EmptyState({ message = 'Veri bulunamadı', icon }) {
   return (

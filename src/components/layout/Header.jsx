@@ -57,7 +57,7 @@ export default function Header({ onRefresh }) {
   const currentLabel = crumbs[crumbs.length - 1]?.label || 'Dashboard';
 
   return (
-    <div className="topbar">
+    <div className="topbar glass">
       {/* Breadcrumb */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <div className="breadcrumb">
