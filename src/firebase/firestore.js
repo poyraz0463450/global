@@ -114,6 +114,43 @@ export const inventoryService = {
         timestamp: serverTimestamp()
       });
     });
+  },
+
+  // Yeni Mal Kabul (GRN) İşlemi: Doğrudan INCOMING QC'ye düşer!
+  addGRN: async (grnData, items) => {
+    // 1. GRN Fişini oluştur
+    const grnRef = await addDoc(getCollection('grnRecords'), {
+      ...grnData,
+      status: 'Kalite Bekliyor', // Direkt stoka girmiyor
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    // 2. Kalemlerin (items) her biri için QC Record (Giriş) oluştur
+    for (const item of items) {
+      await addDoc(getCollection('qcRecords'), {
+        type: 'Giriş',
+        status: 'Bekliyor', // Gelen mallar Kalite kontrol sırasına girdi
+        grnId: grnRef.id,
+        grnNo: grnData.documentNo,
+        supplierName: grnData.supplierName,
+        partId: item.partId,
+        partNo: item.partNo,
+        partName: item.partName,
+        qty: item.qty,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
+    
+    return grnRef;
+  },
+
+  subscribeGRN: (callback) => {
+    const q = query(getCollection('grnRecords'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (snap) => {
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
   }
 };
 
@@ -175,6 +212,22 @@ export const productionService = {
 
 // ─── 4. SATIN ALMA SERVİSİ ───────────────────────────────────────────────────
 export const purchasingService = {
+  subscribeSuppliers: (callback) => {
+    const q = query(getCollection('suppliers'), orderBy('name', 'asc'));
+    return onSnapshot(q, (snap) => {
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+  },
+
+  addSupplier: async (data) => {
+    return addDoc(getCollection('suppliers'), {
+      ...data,
+      isActive: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  },
+
   subscribeRequests: (callback) => {
     const q = query(getCollection('purchaseRequests'), orderBy('createdAt', 'desc'));
     return onSnapshot(q, (snap) => {
@@ -205,6 +258,14 @@ export const qcService = {
     return addDoc(getCollection('qcRecords'), {
       ...qcData,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  },
+
+  updateQCRecord: async (qcId, updates) => {
+    const ref = getDocRef('qcRecords', qcId);
+    return updateDoc(ref, {
+      ...updates,
       updatedAt: serverTimestamp()
     });
   }

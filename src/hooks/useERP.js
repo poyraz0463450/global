@@ -116,6 +116,45 @@ export function useProduction() {
   return { workOrders, stats, loading };
 }
 
+// ── NEW: Purchasing / Logistics Hooks ────────────────────────────────────────
+
+export function useSuppliers() {
+  const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 800);
+    const unsub = purchasingService.subscribeSuppliers((data) => {
+      clearTimeout(timeout);
+      setSuppliers(data);
+      setLoading(false);
+    });
+    return () => { clearTimeout(timeout); unsub(); };
+  }, []);
+
+  return { suppliers, loading };
+}
+
+export function useGRN() {
+  const [grnRecords, setGrnRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 800);
+    const unsub = inventoryService.subscribeGRN?.((data) => {
+      clearTimeout(timeout);
+      setGrnRecords(data);
+      setLoading(false);
+    });
+    return () => { 
+      clearTimeout(timeout); 
+      if (typeof unsub === 'function') unsub(); 
+    };
+  }, []);
+
+  return { grnRecords, loading };
+}
+
 // ─── useQC: Kalite Kontrol Hook'u ─────────────────────────────────────────────
 export function useQC() {
   const [qcRecords, setQcRecords] = useState([]);

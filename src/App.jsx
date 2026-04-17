@@ -17,6 +17,8 @@ import     WorkCenters from './pages/production/WorkCenters';
 import     WorkOrders from './pages/production/WorkOrders';
 import     ProcessQC from './pages/qc/ProcessQC';
 import     IncomingQC from './pages/qc/IncomingQC';
+import     Suppliers from './pages/purchasing/Suppliers';
+import     GRN from './pages/inventory/GRN';
 
 // ComingSoon placeholder for unbuilt pages
 const ComingSoon = ({ title }) => (
@@ -64,13 +66,13 @@ function AppRoutes() {
         <Route path="purchasing/mrp"       element={<ComingSoon title="MRP Analizi" />} />
         <Route path="purchasing/requests"  element={<ComingSoon title="Satın Alma Talepleri" />} />
         <Route path="purchasing/orders"    element={<ComingSoon title="Satın Alma Siparişleri" />} />
-        <Route path="purchasing/receipts"  element={<ComingSoon title="Mal Kabul" />} />
-        <Route path="purchasing/suppliers" element={<ComingSoon title="Tedarikçiler" />} />
+        <Route path="purchasing/receipts"  element={<ComingSoon title="Satın Alma Girişleri" />} />
+        <Route path="purchasing/suppliers" element={<Suppliers />} />
 
         {/* Depo */}
         <Route path="inventory/stock"     element={<Inventory />} />
         <Route path="inventory/movements" element={<ComingSoon title="Stok Hareketleri" />} />
-        <Route path="inventory/grn"       element={<ComingSoon title="Mal Kabul (GRN)" />} />
+        <Route path="inventory/grn"       element={<GRN />} />
 
         {/* Parçalar / BOM */}
         <Route path="parts"     element={<Parts />} />

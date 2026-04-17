@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Modal, Button, Badge } from '../ui/index';
-// Firestore servisinde qcService kullanılacak şekilde planlandı. 
-// Burada dummy update veya log simülasyonu yapacağız veya ilgili API'yi çağıracağız.
-import { productionService } from '../../firebase/firestore';
+import { productionService, inventoryService, qcService } from '../../firebase/firestore';
 import toast from 'react-hot-toast';
 import { ShieldCheck, Crosshair, ClipboardList, PenTool, XCircle } from 'lucide-react';
 
@@ -29,10 +27,8 @@ export default function QCRecordModal({ isOpen, onClose, referenceItem, type = '
         let finalStatus = 'COMPLETED'; // On default keep it completed
         
         if (formData.decision === 'KABUL') {
-          // Normalde burada stoka pozitif bakiye eklenir
           finalStatus = 'QC_PASSED'; 
         } else if (formData.decision === 'RET') {
-           // Hurdaya ayırma mantığı
           finalStatus = 'QC_FAILED';
         }
 
@@ -42,9 +38,34 @@ export default function QCRecordModal({ isOpen, onClose, referenceItem, type = '
           `QC Kararı: ${formData.decision} (Denetçi: ${formData.inspectorName})`
         );
         toast.success(`Kalite raporu kaydedildi: ${formData.decision}`);
-      } else {
-        // Incoming QC için farklı işlem (stok artırımı vb.) yapılabilir.
-        toast.success('Kalite (Incoming) raporu kaydedildi.');
+      } 
+      // Mal Kabul (GRN) sonrası Incoming QC onayı
+      else if (type === 'INCOMING' && referenceItem?.id) {
+        // Kalite kaydını güncelle
+        await qcService.updateQCRecord(referenceItem.id, {
+          status: 'Tamamlandı',
+          inspectorName: formData.inspectorName,
+          decision: formData.decision,
+          certificateNo: formData.certificateNo,
+          notes: formData.notes
+        });
+
+        // Eğer onaylandıysa veya şartlı onaylandıysa faturadaki/irsaliyedeki miktarı stoka ekle
+        if (formData.decision === 'KABUL' || formData.decision === 'SARTLI_KABUL') {
+          const qty = Number(referenceItem.qty || 0);
+          if (qty > 0) {
+            await inventoryService.addMovement(
+              referenceItem.partId, 
+              qty, 
+              'IN', 
+              referenceItem.grnNo || 'Bilinmiyor', 
+              `Giriş Kalite Onayı: ${formData.decision}`
+            );
+            toast.success(`${qty} adet malzeme üretim stoklarına eklendi!`);
+          }
+        } else {
+          toast.error('Malzemeler Kalite Reddi (Hurda/İade) aldı, stoka girmedi.');
+        }
       }
       
       onClose();

@@ -5,19 +5,16 @@ import {
 } from 'lucide-react';
 import { Button, Badge, Spinner, EmptyState } from '../../components/ui/index';
 import QCRecordModal from '../../components/modals/QCRecordModal';
+import { useQC } from '../../hooks/useERP';
 
 export default function IncomingQC() {
-  // Demo data: Gerçek sistemde purchasingService > subscribeRequests üzerinden
-  // "Pending QC" statüsündeki alım siparişleri listelenecektir.
-  const [loading] = useState(false);
+  const { incomingQC, loading } = useQC();
   const [searchTerm, setSearchTerm] = useState('');
   const [isQCModalOpen, setIsQCModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const [pendingIncoming] = useState([
-    { id: 'INC-0991', partNo: 'ALU-7075-T6', partName: 'Alüminyum Kütük', supplier: 'Metehan Metal A.Ş.', qty: 150 },
-    { id: 'INC-0992', partNo: 'O-RING-MIL', partName: 'Sızdırmazlık Contası', supplier: 'Kastaş Kauçuk', qty: 5000 }
-  ]);
+  // Sadece henüz tamamlanmamış ("Bekliyor") olan kayıtları gösteriyoruz
+  const pendingIncoming = incomingQC.filter(r => r.status === 'Bekliyor');
 
   const handleOpenQC = (item) => {
     setSelectedItem(item);
@@ -26,7 +23,8 @@ export default function IncomingQC() {
 
   const filteredItems = pendingIncoming.filter(i => 
     i.partNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    i.supplier?.toLowerCase().includes(searchTerm.toLowerCase())
+    i.supplierName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    i.grnNo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) return (
@@ -85,12 +83,12 @@ export default function IncomingQC() {
             {filteredItems.map((item, idx) => (
               <tr key={item.id} className="anim-fade" style={{ animationDelay: `${idx * 0.05}s` }}>
                 <td style={{ fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--t-primary)' }}>
-                  {item.id}
+                  {item.grnNo || item.id.slice(0, 8)}
                 </td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                      <Factory size={14} color="var(--t-dim)" />
-                     <span style={{ fontWeight: 600, color: 'var(--t-primary)' }}>{item.supplier}</span>
+                     <span style={{ fontWeight: 600, color: 'var(--t-primary)' }}>{item.supplierName}</span>
                   </div>
                 </td>
                 <td>
